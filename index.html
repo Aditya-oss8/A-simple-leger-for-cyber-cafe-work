@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narayan Nexus - Counter Ledger</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #22c55e;
+            --accent-blue: #3b82f6;
+            --accent-amber: #f59e0b;
+            --accent-purple: #a855f7;
+            --border-color: #334155;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #38bdf8;
+            font-size: 1.8rem;
+        }
+
+        /* Top-level module tabs */
+        .module-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .module-tab {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-muted);
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .module-tab.active {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+        }
+
+        .module-section { display: none; }
+        .module-section.active { display: block; }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .type-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .type-btn.active-taken {
+            border-color: var(--accent-green);
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+        }
+
+        .type-btn.active-given {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            padding: 10px;
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #38bdf8;
+            color: #0f172a;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #0284c7;
+            color: #fff;
+        }
+
+        .submit-btn.recharge-btn {
+            background-color: var(--accent-purple);
+        }
+        .submit-btn.recharge-btn:hover {
+            background-color: #9333ea;
+            color: #fff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .stat-card p {
+            margin: 5px 0 0 0;
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        th {
+            background-color: #0f172a;
+            color: var(--text-muted);
+            position: sticky;
+            top: 0;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-taken {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--accent-green);
+        }
+
+        .badge-given {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .badge-carrier {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .slab-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+            font-size: 0.85rem;
+        }
+
+        .slab-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Narayan Nexus — Counter Ledger</h1>
+
+    <!-- Module Switch -->
+    <div class="module-tabs">
+        <button class="module-tab active" id="tabUpiBtn" onclick="switchModule('upi')">💳 UPI / Cash Ledger</button>
+        <button class="module-tab" id="tabRechargeBtn" onclick="switchModule('recharge')">📱 Mobile Recharge Ledger</button>
+    </div>
+
+    <!-- ================= UPI MODULE ================= -->
+    <div class="module-section active" id="section-upi">
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Filtered Cash Volume</h3>
+                <p id="totalVolume">₹0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Filtered Charges Earned</h3>
+                <p id="totalProfit" style="color: var(--accent-green);">₹0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Filtered Entries</h3>
+                <p id="totalEntries">0</p>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2 style="margin-top:0; font-size:1.1rem;">New Entry</h2>
+                <div class="type-selector">
+                    <button type="button" class="type-btn active-taken" id="btnTaken" onclick="selectType('TAKEN')">Cash Taken (UPI Sent)</button>
+                    <button type="button" class="type-btn" id="btnGiven" onclick="selectType('GIVEN')">Cash Given (UPI Recd)</button>
+                </div>
+                <form id="ledgerForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Customer Name</label>
+                            <input type="text" id="personName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile Number</label>
+                            <input type="text" id="mobileNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (₹)</label>
+                            <input type="number" id="amount" step="0.01" required oninput="autoCalculateCharge()">
+                        </div>
+                        <div class="form-group">
+                            <label>Fee / Charge (₹)</label>
+                            <input type="number" id="charge" step="0.01">
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Add Entry</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-top:0; font-size:1.1rem;">Fee Slabs</h2>
+                <form id="slabForm">
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
+                            <label>Up To Amount (₹)</label>
+                            <input type="number" id="slabMax" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fee (₹)</label>
+                            <input type="number" id="slabFee" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn" style="background-color: var(--accent-amber);">Add / Update Slab</button>
+                </form>
+                <ul class="slab-list" id="slabList"></ul>
+
+                <div class="form-group" style="margin-top:15px;">
+                    <label>Flat % Above Highest Slab</label>
+                    <input type="number" id="flatPercent" step="0.1" onchange="saveFlatPercent()">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="action-bar">
+                <h2 style="margin:0; font-size:1.1rem;">Transaction History</h2>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <select id="dateFilter" onchange="renderTable()">
+                        <option value="ALL">All Time</option>
+                        <option value="TODAY">Today Only</option>
+                        <option value="YESTERDAY">Yesterday</option>
+                        <option value="THIS_MONTH">This Month</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="Search name or phone..." oninput="renderTable()" style="padding:6px; width:180px;">
+                    <button onclick="exportCSV()" style="background: var(--border-color); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Export CSV</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Type</th>
+                            <th>Customer</th>
+                            <th>Mobile</th>
+                            <th>Amount</th>
+                            <th>Fee Earned</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= RECHARGE MODULE ================= -->
+    <div class="module-section" id="section-recharge">
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Filtered Recharge Volume</h3>
+                <p id="rTotalVolume">₹0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Filtered Entries</h3>
+                <p id="rTotalEntries">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Top Carrier (Filtered)</h3>
+                <p id="rTopCarrier" style="color: var(--accent-purple); font-size:1.1rem;">—</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-top:0; font-size:1.1rem;">New Recharge Entry</h2>
+            <form id="rechargeForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Customer Name</label>
+                        <input type="text" id="rName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <input type="text" id="rMobile" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" id="rAmount" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Carrier</label>
+                        <select id="rCarrier">
+                            <option>Jio</option>
+                            <option>Airtel</option>
+                            <option>Vi (Vodafone Idea)</option>
+                            <option>BSNL</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn recharge-btn">Add Recharge</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="action-bar">
+                <h2 style="margin:0; font-size:1.1rem;">Recharge History</h2>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <select id="rDateFilter" onchange="renderRechargeTable()">
+                        <option value="ALL">All Time</option>
+                        <option value="TODAY">Today Only</option>
+                        <option value="YESTERDAY">Yesterday</option>
+                        <option value="THIS_MONTH">This Month</option>
+                    </select>
+                    <select id="rCarrierFilter" onchange="renderRechargeTable()">
+                        <option value="ALL">All Carriers</option>
+                        <option>Jio</option>
+                        <option>Airtel</option>
+                        <option>Vi (Vodafone Idea)</option>
+                        <option>BSNL</option>
+                        <option>Other</option>
+                    </select>
+                    <input type="text" id="rSearchInput" placeholder="Search name or phone..." oninput="renderRechargeTable()" style="padding:6px; width:180px;">
+                    <button onclick="exportRechargeCSV()" style="background: var(--border-color); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Export CSV</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Customer</th>
+                            <th>Mobile</th>
+                            <th>Carrier</th>
+                            <th>Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rechargeBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /* ============ MODULE SWITCHING ============ */
+    function switchModule(mod) {
+        document.getElementById('section-upi').classList.toggle('active', mod === 'upi');
+        document.getElementById('section-recharge').classList.toggle('active', mod === 'recharge');
+        document.getElementById('tabUpiBtn').classList.toggle('active', mod === 'upi');
+        document.getElementById('tabRechargeBtn').classList.toggle('active', mod === 'recharge');
+    }
+
+    /* ============ UPI LEDGER ============ */
+    let currentType = 'TAKEN';
+    let ledgerData = JSON.parse(localStorage.getItem('nn_ledger_data')) || [];
+
+    let defaultSlabs = [
+        { max: 1000, fee: 10 },
+        { max: 2000, fee: 20 },
+        { max: 3000, fee: 30 },
+        { max: 5000, fee: 50 }
+    ];
+    let customSlabs = JSON.parse(localStorage.getItem('nn_slab_rules')) || defaultSlabs;
+    let flatPercentRate = parseFloat(localStorage.getItem('nn_flat_percent')) || 1.0;
+
+    document.getElementById('flatPercent').value = flatPercentRate;
+
+    function selectType(type) {
+        currentType = type;
+        const btnTaken = document.getElementById('btnTaken');
+        const btnGiven = document.getElementById('btnGiven');
+
+        if (type === 'TAKEN') {
+            btnTaken.className = 'type-btn active-taken';
+            btnGiven.className = 'type-btn';
+        } else {
+            btnGiven.className = 'type-btn active-given';
+            btnTaken.className = 'type-btn';
+        }
+    }
+
+    function renderSlabs() {
+        customSlabs.sort((a, b) => a.max - b.max);
+        const slabContainer = document.getElementById('slabList');
+        slabContainer.innerHTML = '';
+
+        customSlabs.forEach((s, idx) => {
+            const div = document.createElement('div');
+            div.className = 'slab-item';
+            div.innerHTML = `
+                <span>Up to ₹${s.max.toLocaleString('en-IN')}</span>
+                <span><strong>₹${s.fee}</strong> <a href="#" onclick="removeSlab(${idx}); return false;" style="color:#ef4444; text-decoration:none; margin-left:8px;">✕</a></span>
+            `;
+            slabContainer.appendChild(div);
+        });
+
+        localStorage.setItem('nn_slab_rules', JSON.stringify(customSlabs));
+    }
+
+    document.getElementById('slabForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const maxVal = parseFloat(document.getElementById('slabMax').value);
+        const feeVal = parseFloat(document.getElementById('slabFee').value);
+
+        const existingIdx = customSlabs.findIndex(s => s.max === maxVal);
+        if (existingIdx >= 0) {
+            customSlabs[existingIdx].fee = feeVal;
+        } else {
+            customSlabs.push({ max: maxVal, fee: feeVal });
+        }
+
+        renderSlabs();
+        this.reset();
+        autoCalculateCharge();
+    });
+
+    function removeSlab(idx) {
+        customSlabs.splice(idx, 1);
+        renderSlabs();
+        autoCalculateCharge();
+    }
+
+    function saveFlatPercent() {
+        flatPercentRate = parseFloat(document.getElementById('flatPercent').value) || 1.0;
+        localStorage.setItem('nn_flat_percent', flatPercentRate);
+        autoCalculateCharge();
+    }
+
+    function autoCalculateCharge() {
+        const amt = parseFloat(document.getElementById('amount').value) || 0;
+        const chargeInput = document.getElementById('charge');
+
+        if (amt === 0) {
+            chargeInput.value = '';
+            return;
+        }
+
+        customSlabs.sort((a, b) => a.max - b.max);
+
+        let calculatedFee = null;
+        for (let slab of customSlabs) {
+            if (amt <= slab.max) {
+                calculatedFee = slab.fee;
+                break;
+            }
+        }
+
+        if (calculatedFee === null) {
+            calculatedFee = Math.round(amt * (flatPercentRate / 100));
+        }
+
+        chargeInput.value = calculatedFee;
+    }
+
+    document.getElementById('ledgerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const now = new Date();
+        const entry = {
+            id: Date.now(),
+            dateIso: now.toISOString().slice(0,10),
+            timestamp: now.toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }),
+            type: currentType,
+            name: document.getElementById('personName').value.trim(),
+            mobile: document.getElementById('mobileNo').value.trim(),
+            amount: parseFloat(document.getElementById('amount').value),
+            charge: parseFloat(document.getElementById('charge').value) || 0
+        };
+
+        ledgerData.unshift(entry);
+        saveAndRender();
+        this.reset();
+        selectType('TAKEN');
+    });
+
+    function deleteEntry(id) {
+        if (confirm('Are you sure you want to delete this record?')) {
+            ledgerData = ledgerData.filter(item => item.id !== id);
+            saveAndRender();
+        }
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('nn_ledger_data', JSON.stringify(ledgerData));
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('ledgerBody');
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const filter = document.getElementById('dateFilter').value;
+        tbody.innerHTML = '';
+
+        const todayStr = new Date().toISOString().slice(0,10);
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayStr = yesterdayDate.toISOString().slice(0,10);
+        const currentMonthStr = new Date().toISOString().slice(0,7);
+
+        let totalVol = 0;
+        let totalProf = 0;
+        let count = 0;
+
+        ledgerData.forEach(item => {
+            let passesDateFilter = false;
+            if (filter === 'ALL') passesDateFilter = true;
+            else if (filter === 'TODAY' && item.dateIso === todayStr) passesDateFilter = true;
+            else if (filter === 'YESTERDAY' && item.dateIso === yesterdayStr) passesDateFilter = true;
+            else if (filter === 'THIS_MONTH' && item.dateIso && item.dateIso.startsWith(currentMonthStr)) passesDateFilter = true;
+
+            const passesSearch = item.name.toLowerCase().includes(search) || item.mobile.includes(search);
+
+            if (passesDateFilter && passesSearch) {
+                totalVol += item.amount;
+                totalProf += item.charge;
+                count++;
+
+                const row = document.createElement('tr');
+                const badgeClass = item.type === 'TAKEN' ? 'badge-taken' : 'badge-given';
+                const typeText = item.type === 'TAKEN' ? 'Cash Taken (UPI Sent)' : 'Cash Given (UPI Recd)';
+
+                row.innerHTML = `
+                    <td>${item.timestamp}</td>
+                    <td><span class="badge ${badgeClass}">${typeText}</span></td>
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.mobile}</td>
+                    <td>₹${item.amount.toLocaleString('en-IN')}</td>
+                    <td style="color: var(--accent-green);">+₹${item.charge}</td>
+                    <td><button class="delete-btn" onclick="deleteEntry(${item.id})">✕</button></td>
+                `;
+                tbody.appendChild(row);
+            }
+        });
+
+        document.getElementById('totalVolume').innerText = '₹' + totalVol.toLocaleString('en-IN');
+        document.getElementById('totalProfit').innerText = '₹' + totalProf.toLocaleString('en-IN');
+        document.getElementById('totalEntries').innerText = count;
+    }
+
+    function exportCSV() {
+        if (ledgerData.length === 0) return alert('No data to export!');
+        let csv = 'Date_Iso,Timestamp,Type,Name,Mobile,Amount,Service_Fee\n';
+        ledgerData.forEach(r => {
+            csv += `"${r.dateIso}","${r.timestamp}","${r.type}","${r.name}","${r.mobile}",${r.amount},${r.charge}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `UPI_Ledger_Export_${new Date().toISOString().slice(0,10)}.csv`);
+        a.click();
+    }
+
+    /* ============ RECHARGE LEDGER ============ */
+    let rechargeData = JSON.parse(localStorage.getItem('nn_recharge_data')) || [];
+
+    document.getElementById('rechargeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const now = new Date();
+        const entry = {
+            id: Date.now(),
+            dateIso: now.toISOString().slice(0,10),
+            timestamp: now.toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }),
+            name: document.getElementById('rName').value.trim(),
+            mobile: document.getElementById('rMobile').value.trim(),
+            amount: parseFloat(document.getElementById('rAmount').value),
+            carrier: document.getElementById('rCarrier').value
+        };
+
+        rechargeData.unshift(entry);
+        saveAndRenderRecharge();
+        this.reset();
+    });
+
+    function deleteRecharge(id) {
+        if (confirm('Are you sure you want to delete this record?')) {
+            rechargeData = rechargeData.filter(item => item.id !== id);
+            saveAndRenderRecharge();
+        }
+    }
+
+    function saveAndRenderRecharge() {
+        localStorage.setItem('nn_recharge_data', JSON.stringify(rechargeData));
+        renderRechargeTable();
+    }
+
+    function renderRechargeTable() {
+        const tbody = document.getElementById('rechargeBody');
+        const search = document.getElementById('rSearchInput').value.toLowerCase();
+        const filter = document.getElementById('rDateFilter').value;
+        const carrierFilter = document.getElementById('rCarrierFilter').value;
+        tbody.innerHTML = '';
+
+        const todayStr = new Date().toISOString().slice(0,10);
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayStr = yesterdayDate.toISOString().slice(0,10);
+        const currentMonthStr = new Date().toISOString().slice(0,7);
+
+        let totalVol = 0;
+        let count = 0;
+        const carrierCounts = {};
+
+        rechargeData.forEach(item => {
+            let passesDateFilter = false;
+            if (filter === 'ALL') passesDateFilter = true;
+            else if (filter === 'TODAY' && item.dateIso === todayStr) passesDateFilter = true;
+            else if (filter === 'YESTERDAY' && item.dateIso === yesterdayStr) passesDateFilter = true;
+            else if (filter === 'THIS_MONTH' && item.dateIso && item.dateIso.startsWith(currentMonthStr)) passesDateFilter = true;
+
+            const passesCarrier = carrierFilter === 'ALL' || item.carrier === carrierFilter;
+            const passesSearch = item.name.toLowerCase().includes(search) || item.mobile.includes(search);
+
+            if (passesDateFilter && passesCarrier && passesSearch) {
+                totalVol += item.amount;
+                count++;
+                carrierCounts[item.carrier] = (carrierCounts[item.carrier] || 0) + 1;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.timestamp}</td>
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.mobile}</td>
+                    <td><span class="badge badge-carrier">${item.carrier}</span></td>
+                    <td>₹${item.amount.toLocaleString('en-IN')}</td>
+                    <td><button class="delete-btn" onclick="deleteRecharge(${item.id})">✕</button></td>
+                `;
+                tbody.appendChild(row);
+            }
+        });
+
+        document.getElementById('rTotalVolume').innerText = '₹' + totalVol.toLocaleString('en-IN');
+        document.getElementById('rTotalEntries').innerText = count;
+
+        let topCarrier = '—';
+        let topCount = 0;
+        for (const c in carrierCounts) {
+            if (carrierCounts[c] > topCount) {
+                topCount = carrierCounts[c];
+                topCarrier = c;
+            }
+        }
+        document.getElementById('rTopCarrier').innerText = topCarrier;
+    }
+
+    function exportRechargeCSV() {
+        if (rechargeData.length === 0) return alert('No data to export!');
+        let csv = 'Date_Iso,Timestamp,Name,Mobile,Carrier,Amount\n';
+        rechargeData.forEach(r => {
+            csv += `"${r.dateIso}","${r.timestamp}","${r.name}","${r.mobile}","${r.carrier}",${r.amount}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `Recharge_Ledger_Export_${new Date().toISOString().slice(0,10)}.csv`);
+        a.click();
+    }
+
+    /* ============ INIT ============ */
+    renderSlabs();
+    renderTable();
+    renderRechargeTable();
+</script>
+</body>
+</html>
